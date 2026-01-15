@@ -1,9 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from PyPDF2 import PdfReader
-from google import genai
-from qdrant_client.models import PointStruct
-from io import BytesIO
-from config import qdrant, client
+from ..services import vector_service, embedding_service, document_service
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
@@ -16,54 +12,36 @@ async def upload(
     subject: str = Form(...),
     professor: str = Form(None)
 ):
-    # Extract text
-    pdf = PdfReader(BytesIO(await file.read()))
-    text = " ".join(page.extract_text() for page in pdf.pages)
+    # Extract text from PDF
+    file_content = await file.read()
+    text = document_service.extract_text_from_pdf(file_content)
 
     # Generate embedding
-    response = client.models.embed_content(
-        model="text-embedding-004",
-        contents=[text]
-    )
-    embedding = response.embeddings[0].values
+    embedding = embedding_service.generate_embedding(text)
     
-    # Store in Qdrant
-    payload = {
-        "filename": file.filename,
-        "text": text,
-        "title": title,
-        "semester": semester,
-        "subject": subject,
-        "professor": professor
-    }
-    qdrant.upsert(
-        collection_name="papers",
-        points=[PointStruct(id=hash(file.filename), vector=embedding, payload=payload)]
+    # Create metadata
+    metadata = document_service.create_metadata(
+        filename=file.filename,
+        title=title,
+        semester=semester,
+        subject=subject,
+        professor=professor,
+        text=text
     )
+    
+    # Store in vector database
+    doc_id = hash(file.filename)
+    vector_service.store_document(doc_id, embedding, metadata)
     
     return {"message": "uploaded", "title": title, "subject": subject}
 
 @router.post("/search")
 async def search(query: str):
-    # Vectorize query
-    response = client.models.embed_content(
-        model="text-embedding-004",
-        contents=[query]
-    )
-    query_vector = response.embeddings[0].values
+    # Generate query embedding
+    query_vector = embedding_service.generate_embedding(query)
     
-    # Search Qdrant
-    results = qdrant.query_points(
-        collection_name="papers",
-        query=query_vector,
-        limit=5
-    ).points
+    # Search for similar documents
+    results = vector_service.search_similar(query_vector, limit=5)
     
-    return [{
-        "title": r.payload.get("title", r.payload.get("filename", "Untitled")),
-        "subject": r.payload.get("subject", "N/A"),
-        "semester": r.payload.get("semester", "N/A"),
-        "professor": r.payload.get("professor"),
-        "text": r.payload.get("text", "")[:500],
-        "score": r.score
-    } for r in results]
+    # Format results
+    return [document_service.format_search_result(r) for r in results]

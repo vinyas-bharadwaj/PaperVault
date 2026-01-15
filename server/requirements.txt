@@ -43,3 +43,6 @@ websockets==15.0.1
 pypdf2
 google-generativeai
 qdrant-client
+python-jose[cryptography]
+passlib[argon2]
+pymongo

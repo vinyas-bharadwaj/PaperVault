@@ -1,4 +1,8 @@
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import Input from '../components/Input'
+import Button from '../components/Button'
+import Card from '../components/Card'
 
 interface Result {
   title: string
@@ -24,55 +28,66 @@ export default function Search() {
         method: 'POST'
       })
       const data = await res.json()
-      console.log('Search results:', data)
       setResults(data)
     } catch (err) {
       console.error('Search error:', err)
-      alert('Search failed - check console')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Search Notes</h1>
-      <form onSubmit={handleSearch} style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by topic, concept, or keyword..."
-          style={{ flex: 1, padding: '0.75rem', background: '#18181b', border: '1px solid #3f3f46', borderRadius: '4px', color: '#e4e4e7' }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '0.75rem 1.5rem', background: '#3b82f6', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontWeight: '500' }}
-        >
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-      </form>
-
-      <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {results.map((result, idx) => (
-          <div key={idx} style={{ padding: '1.5rem', background: '#18181b', border: '1px solid #3f3f46', borderRadius: '4px' }}>
-            <h3 style={{ marginBottom: '0.5rem' }}>{result.title}</h3>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#a1a1aa', marginBottom: '1rem' }}>
-              <span>{result.subject}</span>
-              <span>•</span>
-              <span>{result.semester}</span>
-              {result.professor && (
-                <>
-                  <span>•</span>
-                  <span>{result.professor}</span>
-                </>
-              )}
-              <span>•</span>
-              <span>Score: {(result.score * 100).toFixed(1)}%</span>
-            </div>
-            <p style={{ color: '#d4d4d8', fontSize: '0.875rem' }}>{result.text}...</p>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-white mb-2">Search Notes</h1>
+        <p className="text-zinc-400">Find exactly what you're looking for</p>
+      </div>
+      
+      <Card>
+        <form onSubmit={handleSearch} className="flex gap-4">
+          <div className="flex-1">
+            <Input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by topic, concept, or keyword..."
+            />
           </div>
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Searching
+              </span>
+            ) : (
+              'Search'
+            )}
+          </Button>
+        </form>
+      </Card>
+
+      <div className="mt-8 space-y-4">
+        {results.map((result, idx) => (
+          <Card key={idx}>
+            <div className="space-y-3">
+              <h3 className="text-xl font-semibold text-white">{result.title}</h3>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-400">
+                <span className="px-3 py-1 bg-zinc-800 rounded-full">{result.subject}</span>
+                <span>{result.semester}</span>
+                {result.professor && (
+                  <span className="text-zinc-500">• {result.professor}</span>
+                )}
+                <div className="ml-auto flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                  <span className="text-blue-400 font-medium">{(result.score * 100).toFixed(0)}% match</span>
+                </div>
+              </div>
+              <p className="text-zinc-300 leading-relaxed">{result.text}...</p>
+            </div>
+          </Card>
         ))}
       </div>
     </div>

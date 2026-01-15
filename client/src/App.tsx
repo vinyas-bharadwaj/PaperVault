@@ -1,23 +1,33 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
 import Upload from './pages/Upload'
 import Search from './pages/Search'
 import './App.css'
+import Register from './pages/Register'
+import Login from './pages/Login'
 
 function App() {
   return (
     <BrowserRouter>
-      <div style={{ minHeight: '100vh' }}>
-        <nav style={{ padding: '1rem 2rem', borderBottom: '1px solid #27272a' }}>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <h2 style={{ margin: 0 }}>PaperVault</h2>
-            <Link to="/">Upload</Link>
-            <Link to="/search">Search</Link>
-          </div>
-        </nav>
-        <Routes>
-          <Route path="/" element={<Upload />} />
-          <Route path="/search" element={<Search />} />
-        </Routes>
+      <div className="min-h-screen flex flex-col bg-zinc-950">
+        <Navbar />
+        <main className="flex-1 p-8">
+          <Routes>
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Upload />
+              </ProtectedRoute>
+            } />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/search" element={
+              <ProtectedRoute>
+                <Search />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </main>
       </div>
     </BrowserRouter>
   )
