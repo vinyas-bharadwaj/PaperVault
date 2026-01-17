@@ -3,6 +3,8 @@ from .embedding_service import embedding_service
 from .document_service import document_service
 from .auth_service import auth_service
 from .user_service import user_service
+from .chat_service import chat_service
+from .rag_service import rag_service
 
 # Make the services public (Everything else within the files remain private)
-__all__ = ['vector_service', 'embedding_service', 'document_service', 'auth_service', 'user_service']
+__all__ = ['vector_service', 'embedding_service', 'document_service', 'auth_service', 'user_service', 'chat_service', 'rag_service']
